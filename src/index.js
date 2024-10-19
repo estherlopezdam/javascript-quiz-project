@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const questionContainer = document.querySelector("#question");
   const choiceContainer = document.querySelector("#choices");
   const nextButton = document.querySelector("#nextButton");
+  const restartButton = document.querySelector("#restartButton");
 
   // End view elements
   const resultContainer = document.querySelector("#result");
@@ -41,30 +42,51 @@ document.addEventListener("DOMContentLoaded", () => {
   const quiz = new Quiz(questions, quizDuration, quizDuration);
   // Shuffle the quiz questions
   quiz.shuffleQuestions();
+  
 
 
   /************  SHOW INITIAL CONTENT  ************/
+  function updateTimer() {
+    let minutes = Math.floor(quiz.timeRemaining / 60).toString().padStart(2, "0");
+    let seconds = (quiz.timeRemaining % 60).toString().padStart(2, "0");
+  
+    // Display the time remaining in the time remaining container
+    const timeRemainingContainer = document.getElementById("timeRemaining");
+    timeRemainingContainer.innerText = `${minutes}:${seconds}`;
 
-  // Convert the time remaining in seconds to minutes and seconds, and pad the numbers with zeros if needed
-  const minutes = Math.floor(quiz.timeRemaining / 60).toString().padStart(2, "0");
-  const seconds = (quiz.timeRemaining % 60).toString().padStart(2, "0");
+ }  // Convert the time remaining in seconds to minutes and seconds, and pad the numbers with zeros if needed
 
-  // Display the time remaining in the time remaining container
-  const timeRemainingContainer = document.getElementById("timeRemaining");
-  timeRemainingContainer.innerText = `${minutes}:${seconds}`;
 
   // Show first question
   showQuestion();
+ 
 
 
   /************  TIMER  ************/
 
-  let timer;
+ 
+  let intervalID;
+
+  function startTimer() {
+    intervalID = setInterval(() => {
+
+
+      quiz.timeRemaining--;
+    updateTimer();
+    if(quiz.timeRemaining <= 0) {
+      clearInterval(intervalID);
+      endView.style.display = 'flex';
+      showResults();
+    }
+    }, 1000);
+  }
 
 
   /************  EVENT LISTENERS  ************/
 
   nextButton.addEventListener("click", nextButtonHandler);
+  restartButton.addEventListener("click", restartButtonHandler);
+  startTimer();
 
 
 
@@ -154,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   
   function nextButtonHandler () {
-    let selectedAnswer; // A variable to store the selected answer value
+    let selectedAnswer = null; // A variable to store the selected answer value
 
     // YOUR CODE HERE:
     //
@@ -169,7 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (choice.checked) {
         selectedAnswer = choice.value;
         console.log(selectedAnswer);
-      }
+      } 
     });
       
     // 3. If an answer is selected (`selectedAnswer`), check if it is correct and move to the next question
@@ -179,13 +201,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (quiz.checkAnswer(selectedAnswer)) { 
           quiz.moveToNextQuestion(); 
           showQuestion(); 
-    } else if (!quiz.checkAnswer(selectedAnswer)) {
+    } else if(selectedAnswer === null) {
+             alert("select Answer, Please");
+    }else {
             quiz.moveToNextQuestion(); 
-            showQuestion();            
+            showQuestion(); 
 
-    } else {
-      alert("Please select an answeer!");
-    }
+        }
   }  
 
 
@@ -200,9 +222,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 2. Show the end view (div#endView)
     endView.style.display = "flex";
+    clearInterval(intervalID);
     
     // 3. Update the result container (div#result) inner text to show the number of correct answers out of total questions
     resultContainer.innerText = `You scored ${quiz.correctAnswers} out of ${quiz.questions.length} correct answers!`; // This value is hardcoded as a placeholder
+  }
+
+  function restartButtonHandler() {
+    quiz.timeRemaining = quizDuration;
+    endView.style.display = 'none';
+
+    quizView.style.display = 'block';
+
+    quiz.currentQuestionIndex = 0;
+    quiz.correctAnswers = 0;
+
+    quiz.shuffleQuestions();
+    showQuestion();
+    updateTimer();
+    startTimer();
   }
   
 });

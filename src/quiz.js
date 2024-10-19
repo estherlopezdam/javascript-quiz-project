@@ -39,6 +39,7 @@ class Quiz {
             this.correctAnswers += 1;
             return true;
         } 
+
     }
 
     // 6. hasEnded()
